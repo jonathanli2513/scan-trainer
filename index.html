@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Scan Trainer" />
+  <title>Scan Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #F4569A;
+      --pink-dark: #4B1528;
+      --pink-mid: #99234E;
+      --yellow: #F5C842;
+      --yellow-dark: #3A2100;
+      --yellow-mid: #9A7200;
+      --bg: #0d0d0d;
+      --surface: #1a1a1a;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8e8e8;
+      --muted: rgba(255,255,255,0.4);
+      --radius: 16px;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+      gap: 0;
+      min-height: 100dvh;
+    }
+
+    header {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(28px, 7vw, 40px);
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    header p {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    #colour-display {
+      width: 100%;
+      max-width: 480px;
+      height: clamp(180px, 40vh, 280px);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: background 0.1s ease, border-color 0.1s ease;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    #colour-display::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.06;
+      background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255,255,255,0.5) 10px,
+        rgba(255,255,255,0.5) 11px
+      );
+    }
+
+    #colour-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(48px, 14vw, 80px);
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      position: relative;
+      z-index: 1;
+      transition: color 0.1s ease;
+      user-select: none;
+    }
+
+    #colour-display.active #colour-label {
+      color: rgba(0,0,0,0.35);
+    }
+
+    #flash-ring {
+      position: absolute;
+      inset: -2px;
+      border-radius: calc(var(--radius) + 2px);
+      border: 3px solid transparent;
+      transition: border-color 0.1s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #stats-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 500;
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      letter-spacing: 1px;
+    }
+
+    #timer-bar-wrap {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    #timer-bar {
+      height: 100%;
+      border-radius: 999px;
+      width: 100%;
+      background: var(--muted);
+      transition: width 0.05s linear, background 0.1s ease;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .ctrl-btn {
+      flex: 1;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
+    }
+
+    .ctrl-btn:hover:not(:disabled) { background: #2a2a2a; }
+    .ctrl-btn:active:not(:disabled) { transform: scale(0.97); }
+    .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #start-btn {
+      border-color: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    #status-text {
+      margin-top: 16px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Scan Trainer</h1>
+    <p>Football scanning drill</p>
+  </header>
+
+  <div id="colour-display">
+    <span id="colour-label">Ready</span>
+    <div id="flash-ring"></div>
+  </div>
+
+  <div id="stats-row">
+    <div class="stat-card">
+      <span class="stat-label">Switches</span>
+      <span class="stat-value" id="switch-count">0</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Next in</span>
+      <span class="stat-value" id="countdown">—</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Interval</span>
+      <span class="stat-value" id="interval-display">3s</span>
+    </div>
+  </div>
+
+  <div id="timer-bar-wrap">
+    <div id="timer-bar"></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="start-btn" onclick="startDrill()">Start</button>
+    <button class="ctrl-btn" id="stop-btn" onclick="stopDrill()" disabled>Stop</button>
+  </div>
+
+  <p id="status-text">Tap start to begin</p>
+
+  <script>
+    const PINK_BG    = '#F4569A';
+    const YELLOW_BG  = '#F5C842';
+    const INTERVAL_MS = 3000;
+    const TICK_MS     = 50;
+
+    let current = 'pink';
+    let elapsed = 0;
+    let switchCount = 0;
+    let running = false;
+    let ticker = null;
+
+    const display     = document.getElementById('colour-display');
+    const label       = document.getElementById('colour-label');
+    const ring        = document.getElementById('flash-ring');
+    const bar         = document.getElementById('timer-bar');
+    const countEl     = document.getElementById('countdown');
+    const switchEl    = document.getElementById('switch-count');
+    const statusEl    = document.getElementById('status-text');
+    const startBtn    = document.getElementById('start-btn');
+    const stopBtn     = document.getElementById('stop-btn');
+
+    function applyColour(c) {
+      const isPink = c === 'pink';
+      display.style.background = isPink ? PINK_BG : YELLOW_BG;
+      display.classList.add('active');
+      label.textContent = isPink ? 'Pink' : 'Yellow';
+      bar.style.background = isPink ? PINK_BG : YELLOW_BG;
+      ring.style.borderColor = isPink ? 'rgba(244,86,154,0.6)' : 'rgba(245,200,66,0.6)';
+    }
+
+    function tick() {
+      elapsed += TICK_MS;
+      const remaining = INTERVAL_MS - elapsed;
+      const pct = ((INTERVAL_MS - elapsed) / INTERVAL_MS) * 100;
+      bar.style.width = Math.max(0, pct) + '%';
+      countEl.textContent = (Math.max(0, remaining) / 1000).toFixed(1) + 's';
+
+      if (elapsed >= INTERVAL_MS) {
+        elapsed = 0;
+        switchCount++;
+        switchEl.textContent = switchCount;
+        current = current === 'pink' ? 'yellow' : 'pink';
+        applyColour(current);
+      }
+    }
+
+    function startDrill() {
+      if (running) return;
+      running = true;
+      current = 'pink';
+      elapsed = 0;
+      switchCount = 0;
+      switchEl.textContent = '0';
+      applyColour('pink');
+      bar.style.width = '100%';
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      statusEl.textContent = 'Scan the pitch on every colour change';
+      ticker = setInterval(tick, TICK_MS);
+    }
+
+    function stopDrill() {
+      if (!running) return;
+      running = false;
+      clearInterval(ticker);
+      ticker = null;
+      display.style.background = 'var(--surface)';
+      display.classList.remove('active');
+      label.textContent = 'Done';
+      label.style.color = '';
+      bar.style.width = '0%';
+      bar.style.background = 'var(--muted)';
+      ring.style.borderColor = 'transparent';
+      countEl.textContent = '—';
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusEl.textContent = switchCount + ' colour change' + (switchCount !== 1 ? 's' : '') + ' completed';
+    }
+  </script>
+</body>
+</html>
